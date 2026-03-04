@@ -1,0 +1,54 @@
+name: Example macOS Build
+
+# This workflow demonstrates how to use the self-hosted Mac runner.
+# It will only run if you have a registered runner with matching labels.
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  build:
+    name: macOS Build
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: System Info
+        run: |
+          echo "macOS Version: $(sw_vers -productVersion)"
+          echo "Architecture: $(uname -m)"
+          echo "Xcode CLI Tools: $(xcode-select -p)"
+          echo "Swift: $(swift --version 2>/dev/null | head -1 || echo 'not installed')"
+          echo "Hostname: $(hostname)"
+          echo "User: $(whoami)"
+
+      - name: Check Swift Compiler
+        run: |
+          swift --version
+          which swift
+
+      - name: Build Swift Package (example)
+        run: |
+          # Create a minimal Swift package for testing
+          mkdir -p /tmp/test-build && cd /tmp/test-build
+          swift package init --name TestPackage --type executable
+          swift build
+          swift test
+          echo "Build and test successful!"
+
+      - name: Check Available Tools
+        run: |
+          echo "--- Homebrew ---"
+          brew --version
+          echo "--- jq ---"
+          jq --version
+          echo "--- gh ---"
+          gh --version
+          echo "--- SwiftLint ---"
+          swiftlint version || echo "not installed"
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf /tmp/test-build

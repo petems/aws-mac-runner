@@ -1,0 +1,50 @@
+#!/bin/bash
+# User data script for Mac EC2 instance
+# Runs as root - bootstrap.sh handles switching to ec2-user
+set -euo pipefail
+
+LOG_FILE="/var/log/mac-runner-bootstrap.log"
+
+echo "=== Mac Runner Bootstrap Started: $(date) ===" | tee "$LOG_FILE"
+
+# Write scripts to disk from embedded content
+SCRIPTS_DIR="/tmp/mac-runner-scripts"
+mkdir -p "$SCRIPTS_DIR"
+
+cat > "$SCRIPTS_DIR/bootstrap.sh" << 'BOOTSTRAP_EOF'
+${script_bootstrap}
+BOOTSTRAP_EOF
+
+cat > "$SCRIPTS_DIR/install-homebrew.sh" << 'HOMEBREW_EOF'
+${script_install_homebrew}
+HOMEBREW_EOF
+
+cat > "$SCRIPTS_DIR/install-xcode-cli-tools.sh" << 'XCODE_EOF'
+${script_install_xcode_cli_tools}
+XCODE_EOF
+
+cat > "$SCRIPTS_DIR/install-common-tools.sh" << 'TOOLS_EOF'
+${script_install_common_tools}
+TOOLS_EOF
+
+cat > "$SCRIPTS_DIR/install-github-runner.sh" << 'RUNNER_EOF'
+${script_install_github_runner}
+RUNNER_EOF
+
+cat > "$SCRIPTS_DIR/configure-runner-service.sh" << 'SERVICE_EOF'
+${script_configure_runner_service}
+SERVICE_EOF
+
+chmod +x "$SCRIPTS_DIR"/*.sh
+
+# Run bootstrap as ec2-user (runner must not run as root)
+su - ec2-user -c "
+  export GITHUB_RUNNER_TOKEN='${github_runner_token}'
+  export GITHUB_RUNNER_URL='${github_runner_url}'
+  export GITHUB_RUNNER_NAME='${github_runner_name}'
+  export GITHUB_RUNNER_LABELS='${github_runner_labels}'
+  export GITHUB_RUNNER_GROUP='${github_runner_group}'
+  $SCRIPTS_DIR/bootstrap.sh
+" 2>&1 | tee -a "$LOG_FILE"
+
+echo "=== Mac Runner Bootstrap Completed: $(date) ===" | tee -a "$LOG_FILE"
