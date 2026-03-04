@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install common CI/CD tools via Homebrew
+# Install common CI/CD tools via Homebrew + pre-built binaries
 set -euo pipefail
 
 LOG_PREFIX="[common-tools]"
@@ -19,12 +19,6 @@ BREW_PACKAGES=(
   fastlane
 )
 
-# swiftlint requires full Xcode.app to build from source — install separately
-# only if Xcode.app is present (not just CLI tools)
-OPTIONAL_BREW_PACKAGES=(
-  swiftlint
-)
-
 log "Installing Homebrew packages: ${BREW_PACKAGES[*]}"
 for pkg in "${BREW_PACKAGES[@]}"; do
   if brew list "$pkg" &>/dev/null; then
@@ -35,15 +29,19 @@ for pkg in "${BREW_PACKAGES[@]}"; do
   fi
 done
 
-# Install optional packages that may require full Xcode.app
-for pkg in "${OPTIONAL_BREW_PACKAGES[@]}"; do
-  if brew list "$pkg" &>/dev/null; then
-    log "  $pkg: already installed"
-  else
-    log "  $pkg: installing (optional, may fail without full Xcode.app)..."
-    brew install "$pkg" --quiet || log "  $pkg: skipped (requires full Xcode.app)"
-  fi
-done
+# Install SwiftLint from pre-built binary (Homebrew requires full Xcode.app to
+# compile from source, but the .pkg from GitHub releases works with just CLI tools)
+SWIFTLINT_VERSION="${SWIFTLINT_VERSION:-0.63.2}"
+if command -v swiftlint &>/dev/null; then
+  log "  swiftlint: already installed ($(swiftlint version))"
+else
+  log "  swiftlint: installing v${SWIFTLINT_VERSION} from pre-built binary..."
+  curl -fsSL -o /tmp/SwiftLint.pkg \
+    "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/SwiftLint.pkg"
+  sudo installer -pkg /tmp/SwiftLint.pkg -target /
+  rm -f /tmp/SwiftLint.pkg
+  log "  swiftlint: installed $(swiftlint version)"
+fi
 
 log "Common tools installation complete"
 log "Installed versions:"
