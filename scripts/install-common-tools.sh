@@ -15,9 +15,14 @@ BREW_PACKAGES=(
   jq
   gh
   cmake
-  swiftlint
   cocoapods
   fastlane
+)
+
+# swiftlint requires full Xcode.app to build from source — install separately
+# only if Xcode.app is present (not just CLI tools)
+OPTIONAL_BREW_PACKAGES=(
+  swiftlint
 )
 
 log "Installing Homebrew packages: ${BREW_PACKAGES[*]}"
@@ -27,6 +32,16 @@ for pkg in "${BREW_PACKAGES[@]}"; do
   else
     log "  $pkg: installing..."
     brew install "$pkg" --quiet
+  fi
+done
+
+# Install optional packages that may require full Xcode.app
+for pkg in "${OPTIONAL_BREW_PACKAGES[@]}"; do
+  if brew list "$pkg" &>/dev/null; then
+    log "  $pkg: already installed"
+  else
+    log "  $pkg: installing (optional, may fail without full Xcode.app)..."
+    brew install "$pkg" --quiet || log "  $pkg: skipped (requires full Xcode.app)"
   fi
 done
 
