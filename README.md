@@ -39,6 +39,44 @@ terraform apply -var="github_runner_token=$RUNNER_TOKEN"
 
 > **Cost Warning:** Allocating a dedicated host starts a **24-hour minimum billing period** (~$26+/day). See [Cost Management](docs/05-cost-management.md).
 
+> **Timing:** Dedicated host allocation takes 10-20 minutes, instance boot 5-10 minutes, plus bootstrap scripts. Expect **20-45 minutes total** from `terraform apply` to runner online.
+
+## GitHub Runner Token
+
+The runner registration token is short-lived (1 hour) and must be generated immediately before deploying.
+
+**For a repository runner:**
+
+```bash
+# Replace {owner}/{repo} with your repository
+RUNNER_TOKEN=$(gh api -X POST \
+  repos/{owner}/{repo}/actions/runners/registration-token \
+  --jq '.token')
+```
+
+**For an organization runner:**
+
+```bash
+# Replace {org} with your organization
+RUNNER_TOKEN=$(gh api -X POST \
+  orgs/{org}/actions/runners/registration-token \
+  --jq '.token')
+```
+
+Pass the token to Terraform at apply time (never commit it to tfvars):
+
+```bash
+terraform apply -var="github_runner_token=$RUNNER_TOKEN"
+```
+
+Or combine token generation and deploy in one step:
+
+```bash
+terraform apply -var="github_runner_token=$(gh api -X POST repos/{owner}/{repo}/actions/runners/registration-token --jq '.token')"
+```
+
+See [GitHub Runner Setup](docs/04-github-runner-setup.md) for details on labels, ephemeral mode, and service management.
+
 ## Architecture
 
 ```

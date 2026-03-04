@@ -23,15 +23,48 @@ Your dedicated host quota is 0 (the default).
 
 ### Instance Stuck in "Pending"
 
-Mac instances take longer to launch than typical EC2 instances (5-15 minutes).
+Mac instances take **significantly longer** to launch than typical EC2 instances. This is normal and expected.
 
-**Actions:**
-1. Wait at least 15 minutes
-2. Check the instance system log:
-   ```bash
-   aws ec2 get-console-output --instance-id <id>
-   ```
-3. If still stuck after 20 minutes, terminate and re-launch
+**Expected timelines:**
+
+| Phase | Duration |
+|-------|----------|
+| Dedicated host allocation | 10-20 minutes |
+| Instance pending -> running | 5-10 minutes |
+| User data / bootstrap scripts | 5-15 minutes |
+| **Total: apply to runner online** | **20-45 minutes** |
+
+> The dedicated host allocation is the slowest step. AWS is provisioning physical Apple Silicon hardware, which takes longer than launching a VM on shared infrastructure. ([AWS docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-mac-instances.html), [user experience report](https://devdosvid.blog/2021/01/19/mac1.metal-and-mac2.metal-ec2-instances-user-experience/))
+
+**Monitoring commands:**
+
+```bash
+# Check dedicated host status (allocation in progress if empty/pending)
+aws ec2 describe-hosts \
+  --filter "Name=tag:Name,Values=mac-runner-mac-host" \
+  --query 'Hosts[].{HostId:HostId,State:State,AZ:AvailabilityZone}' \
+  --output table
+
+# Check instance status once host is allocated
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=mac-runner-mac-runner" \
+  --query 'Reservations[].Instances[].{ID:InstanceId,State:State.Name,IP:PublicIpAddress,LaunchTime:LaunchTime}' \
+  --output table
+
+# Check instance status checks (both must pass before SSM/SSH works)
+aws ec2 describe-instance-status \
+  --instance-ids <instance-id> \
+  --query 'InstanceStatuses[].{State:InstanceState.Name,System:SystemStatus.Status,Instance:InstanceStatus.Status}' \
+  --output table
+
+# Check instance system log for boot progress
+aws ec2 get-console-output --instance-id <instance-id> --output text
+```
+
+**Actions if stuck:**
+1. Wait at least 20 minutes for host allocation
+2. If the host shows `available` but instance is still `pending` after 15 minutes, check console output
+3. If still stuck after 30 minutes total, terminate and re-launch
 
 ## Runner Not Appearing in GitHub
 
@@ -90,13 +123,26 @@ tail -100 _diag/Runner_*.log
 
 ## Slow Boot / Long Bootstrap
 
-Mac instances have a longer boot time than standard EC2 instances. The full bootstrap (user data + script execution) can take 10-15 minutes.
+Mac instances are bare metal — AWS is provisioning dedicated physical Apple Silicon hardware, not a virtual machine. This means every phase is slower than a typical EC2 launch:
+
+- **Host allocation** takes 10-20 minutes (physical hardware provisioning)
+- **Instance boot** takes 5-10 minutes (macOS boot on bare metal)
+- **User data scripts** take 5-15 minutes (Homebrew, tools, runner install)
+- **After termination**, the host enters a scrubbing state for ~1-1.5 hours before it can be reused ([source](https://devdosvid.blog/2021/01/19/mac1.metal-and-mac2.metal-ec2-instances-user-experience/))
 
 ### Speed Up Options
 
-1. **Bake a custom AMI** — pre-install tools, skip bootstrap
+1. **Bake a custom AMI** — pre-install tools, skip bootstrap (biggest win)
 2. **Reduce installed tools** — edit `install-common-tools.sh` to only install what you need
 3. **Increase EBS performance** — already tuned to 10K IOPS / 400 MiB/s
+4. **Keep the host allocated** — avoid re-allocation time by stopping/starting the instance instead of destroying
+
+### References
+
+- [AWS EC2 Mac Instances documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-mac-instances.html)
+- [Launch a Mac instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/mac-instance-launch.html)
+- [mac1.metal and mac2.metal user experience](https://devdosvid.blog/2021/01/19/mac1.metal-and-mac2.metal-ec2-instances-user-experience/)
+- [AWS EC2 Mac Getting Started](https://github.com/aws-samples/amazon-ec2-mac-getting-started)
 
 ## SSM Connection Issues
 

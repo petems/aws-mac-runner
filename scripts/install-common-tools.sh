@@ -15,6 +15,9 @@ BREW_PACKAGES=(
   jq
   gh
   cmake
+  swiftlint
+  cocoapods
+  fastlane
 )
 
 log "Installing Homebrew packages: ${BREW_PACKAGES[*]}"
@@ -26,29 +29,6 @@ for pkg in "${BREW_PACKAGES[@]}"; do
     brew install "$pkg" --quiet
   fi
 done
-
-GEM_PACKAGES=(
-  cocoapods
-  fastlane
-)
-
-log "Installing Ruby gems: ${GEM_PACKAGES[*]}"
-for gem in "${GEM_PACKAGES[@]}"; do
-  if gem list -i "$gem" &>/dev/null; then
-    log "  $gem: already installed"
-  else
-    log "  $gem: installing..."
-    gem install "$gem" --no-document
-  fi
-done
-
-# SwiftLint via Homebrew
-if brew list swiftlint &>/dev/null; then
-  log "swiftlint: already installed"
-else
-  log "swiftlint: installing..."
-  brew install swiftlint --quiet
-fi
 
 log "Common tools installation complete"
 log "Installed versions:"
