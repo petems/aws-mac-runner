@@ -13,8 +13,11 @@ repos:
     rev: v1.96.3
     hooks:
       - id: terraform_fmt
+        args:
+          - --env-vars=OTEL_TRACES_EXPORTER=""
       - id: terraform_validate
         args:
+          - --env-vars=OTEL_TRACES_EXPORTER=""
           - --hook-config=--retry-once-with-cleanup=true
       - id: terraform_tflint
         args:
