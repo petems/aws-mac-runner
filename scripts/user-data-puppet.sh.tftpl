@@ -1,0 +1,82 @@
+#!/bin/bash
+# User data script for Mac EC2 instance - Puppet-managed
+# Runs as root - deploys Puppet code and applies the runner role
+set -euo pipefail
+
+LOG_FILE="/var/log/mac-runner-bootstrap.log"
+
+echo "=== Mac Runner Puppet Bootstrap Started: $(date) ===" | tee "$LOG_FILE"
+
+# Write Puppet files to a staging directory
+PUPPET_DIR="/tmp/mac-runner-puppet"
+mkdir -p "$PUPPET_DIR/site-modules/role/manifests"
+mkdir -p "$PUPPET_DIR/site-modules/profile/manifests/mac_runner"
+mkdir -p "$PUPPET_DIR/data"
+
+# --- Puppetfile ---
+cat > "$PUPPET_DIR/Puppetfile" << 'PUPPETFILE_EOF'
+${puppet_puppetfile}
+PUPPETFILE_EOF
+
+# --- Hiera config ---
+cat > "$PUPPET_DIR/hiera.yaml" << 'HIERA_EOF'
+${puppet_hiera_yaml}
+HIERA_EOF
+
+# --- Hiera data ---
+cat > "$PUPPET_DIR/data/common.yaml" << 'COMMON_EOF'
+${puppet_data_common}
+COMMON_EOF
+
+# --- Role manifest ---
+cat > "$PUPPET_DIR/site-modules/role/manifests/github_actions_mac_runner.pp" << 'ROLE_EOF'
+${puppet_role_manifest}
+ROLE_EOF
+
+# --- Profile manifests ---
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner.pp" << 'PROFILE_EOF'
+${puppet_profile_mac_runner}
+PROFILE_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/base.pp" << 'BASE_EOF'
+${puppet_profile_base}
+BASE_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/homebrew.pp" << 'HOMEBREW_EOF'
+${puppet_profile_homebrew}
+HOMEBREW_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/xcode_cli_tools.pp" << 'XCODE_EOF'
+${puppet_profile_xcode_cli_tools}
+XCODE_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/tools.pp" << 'TOOLS_EOF'
+${puppet_profile_tools}
+TOOLS_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/runner_install.pp" << 'INSTALL_EOF'
+${puppet_profile_runner_install}
+INSTALL_EOF
+
+cat > "$PUPPET_DIR/site-modules/profile/manifests/mac_runner/runner_service.pp" << 'SERVICE_EOF'
+${puppet_profile_runner_service}
+SERVICE_EOF
+
+# --- Bootstrap script ---
+cat > "$PUPPET_DIR/puppet-bootstrap.sh" << 'BOOTSTRAP_EOF'
+${script_puppet_bootstrap}
+BOOTSTRAP_EOF
+
+chmod +x "$PUPPET_DIR/puppet-bootstrap.sh"
+
+# Export runner config for the bootstrap script to write instance.yaml
+export GITHUB_RUNNER_TOKEN='${github_runner_token}'
+export GITHUB_RUNNER_URL='${github_runner_url}'
+export GITHUB_RUNNER_NAME='${github_runner_name}'
+export GITHUB_RUNNER_LABELS='${github_runner_labels}'
+export GITHUB_RUNNER_GROUP='${github_runner_group}'
+
+# Run the Puppet bootstrap
+"$PUPPET_DIR/puppet-bootstrap.sh" 2>&1 | tee -a "$LOG_FILE"
+
+echo "=== Mac Runner Puppet Bootstrap Completed: $(date) ===" | tee -a "$LOG_FILE"

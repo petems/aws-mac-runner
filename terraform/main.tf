@@ -37,18 +37,24 @@ module "mac_instance" {
   root_volume_iops       = var.root_volume_iops
   root_volume_throughput = var.root_volume_throughput
 
-  user_data = templatefile("${path.module}/../scripts/user-data.sh.tftpl", {
-    github_runner_token             = var.github_runner_token
-    github_runner_url               = var.github_runner_url
-    github_runner_name              = var.github_runner_name
-    github_runner_labels            = var.github_runner_labels
-    github_runner_group             = var.github_runner_group
-    script_bootstrap                = file("${path.module}/../scripts/bootstrap.sh")
-    script_install_homebrew         = file("${path.module}/../scripts/install-homebrew.sh")
-    script_install_xcode_cli_tools  = file("${path.module}/../scripts/install-xcode-cli-tools.sh")
-    script_install_common_tools     = file("${path.module}/../scripts/install-common-tools.sh")
-    script_install_github_runner    = file("${path.module}/../scripts/install-github-runner.sh")
-    script_configure_runner_service = file("${path.module}/../scripts/configure-runner-service.sh")
+  user_data = templatefile("${path.module}/../scripts/user-data-puppet.sh.tftpl", {
+    github_runner_token            = var.github_runner_token
+    github_runner_url              = var.github_runner_url
+    github_runner_name             = var.github_runner_name
+    github_runner_labels           = var.github_runner_labels
+    github_runner_group            = var.github_runner_group
+    script_puppet_bootstrap        = file("${path.module}/../scripts/puppet-bootstrap.sh")
+    puppet_puppetfile              = file("${path.module}/../puppet/Puppetfile")
+    puppet_hiera_yaml              = file("${path.module}/../puppet/hiera.yaml")
+    puppet_data_common             = file("${path.module}/../puppet/data/common.yaml")
+    puppet_role_manifest           = file("${path.module}/../puppet/site-modules/role/manifests/github_actions_mac_runner.pp")
+    puppet_profile_mac_runner      = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner.pp")
+    puppet_profile_base            = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/base.pp")
+    puppet_profile_homebrew        = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/homebrew.pp")
+    puppet_profile_xcode_cli_tools = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/xcode_cli_tools.pp")
+    puppet_profile_tools           = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/tools.pp")
+    puppet_profile_runner_install  = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/runner_install.pp")
+    puppet_profile_runner_service  = file("${path.module}/../puppet/site-modules/profile/manifests/mac_runner/runner_service.pp")
   })
 }
 

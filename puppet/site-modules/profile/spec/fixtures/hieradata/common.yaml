@@ -1,0 +1,29 @@
+---
+lookup_options:
+  profile::mac_runner::runner_install::github_runner_token:
+    convert_to: "Sensitive"
+
+profile::mac_runner::base::log_dir: "/var/log/mac-runner"
+profile::mac_runner::base::runner_user: "ec2-user"
+profile::mac_runner::base::runner_home: "/Users/ec2-user"
+
+profile::mac_runner::homebrew::brew_path: "/opt/homebrew/bin/brew"
+
+profile::mac_runner::tools::brew_packages:
+  - jq
+  - gh
+  - cmake
+  - cocoapods
+  - fastlane
+  - swiftlint
+
+profile::mac_runner::runner_install::runner_version: "2.322.0"
+profile::mac_runner::runner_install::runner_dir: "/Users/ec2-user/actions-runner"
+profile::mac_runner::runner_install::github_runner_url: "https://github.com/example/repo"
+profile::mac_runner::runner_install::github_runner_token: "AABCDEF1234567890"
+profile::mac_runner::runner_install::github_runner_name: "test-runner"
+profile::mac_runner::runner_install::github_runner_labels: "self-hosted,macOS,ARM64"
+profile::mac_runner::runner_install::github_runner_group: "default"
+
+profile::mac_runner::runner_service::runner_dir: "/Users/ec2-user/actions-runner"
+profile::mac_runner::runner_service::runner_user: "ec2-user"

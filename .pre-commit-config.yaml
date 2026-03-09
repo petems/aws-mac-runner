@@ -37,3 +37,11 @@ repos:
     hooks:
       - id: shellcheck
         args: ["-x"]
+
+  - repo: https://github.com/chriskuehl/puppet-pre-commit-hooks
+    rev: v2.1.0
+    hooks:
+      - id: puppet-lint
+        args:
+          - --no-autoloader_layout-check
+          - --no-documentation-check

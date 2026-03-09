@@ -111,6 +111,7 @@ See [Architecture](docs/02-architecture.md) for the full diagram.
 | [Security](docs/06-security.md) | VPC isolation, SSM, IMDSv2, encryption |
 | [Troubleshooting](docs/07-troubleshooting.md) | Common issues and solutions |
 | [Teardown](docs/08-teardown.md) | Safe de-registration and destruction |
+| [Agentless Puppet (Bolt)](docs/09-puppet-agentless.md) | Push config changes without rebuilding |
 
 ## Repository Structure
 
@@ -138,7 +139,15 @@ aws-mac-runner/
 │   ├── install-github-runner.sh
 │   ├── configure-runner-service.sh
 │   └── cleanup-host.sh
-├── docs/                                    # Guides (01-08)
+├── puppet/
+│   ├── site-modules/                        # Custom Puppet modules (role, profile)
+│   ├── data/                                # Hiera data (common.yaml)
+│   ├── hiera.yaml                           # Hiera hierarchy config
+│   ├── Puppetfile                           # Forge module dependencies
+│   └── bolt/                                # Bolt agentless project
+│       ├── Boltdir/                         # Bolt project config + inventory
+│       └── plans/                           # Bolt plans (provision, cleanup)
+├── docs/                                    # Guides (01-09)
 ├── .github/workflows/                       # CI pipelines
 ├── Makefile                                 # Common operations
 └── .pre-commit-config.yaml                  # Code quality hooks
