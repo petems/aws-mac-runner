@@ -18,7 +18,7 @@ profile::mac_runner::tools::brew_packages:
   - cmake
   - cocoapods
   - fastlane
-profile::mac_runner::tools::swiftlint_version: "0.63.2"
+  - swiftlint
 
 # Runner install
 profile::mac_runner::runner_install::runner_version: "2.322.0"
