@@ -41,6 +41,12 @@ puppet/vendor/
 puppet/site-modules/profile/spec/fixtures/modules/
 puppet/modules/
 
+# Bolt
+puppet/bolt/Boltdir/inventory.yaml
+puppet/bolt/Boltdir/.modules/
+puppet/bolt/Boltdir/.plugin_cache/
+puppet/bolt/Boltdir/.resource_types/
+
 # Secrets
 *.pem
 *.key

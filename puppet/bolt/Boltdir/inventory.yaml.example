@@ -1,0 +1,38 @@
+---
+# Copy this file to inventory.yaml and fill in your instance details.
+# inventory.yaml is git-ignored.
+
+groups:
+  - name: mac_runners
+    targets:
+      - uri: <INSTANCE_IP_OR_HOSTNAME>
+    config:
+      transport: ssh
+      ssh:
+        user: ec2-user
+        private-key: ~/.ssh/your-key.pem
+        host-key-check: false
+        run-as: root
+
+# --- Alternative: SSM port-forwarding tunnel ---
+# Start the tunnel first:
+#   aws ssm start-session \
+#     --target <instance-id> \
+#     --document-name AWS-StartPortForwardingSession \
+#     --parameters '{"portNumber":["22"],"localPortNumber":["2222"]}' \
+#     --profile ese-sandbox
+#
+# Then use this inventory instead:
+#
+# groups:
+#   - name: mac_runners
+#     targets:
+#       - uri: localhost
+#     config:
+#       transport: ssh
+#       ssh:
+#         port: 2222
+#         user: ec2-user
+#         private-key: ~/.ssh/your-key.pem
+#         host-key-check: false
+#         run-as: root

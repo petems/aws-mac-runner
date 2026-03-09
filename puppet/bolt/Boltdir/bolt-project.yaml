@@ -1,4 +1,9 @@
 ---
 name: mac_runner
+modulepath:
+  - ../../site-modules
+  - ../../modules
+hiera-config: ../../hiera.yaml
 plans:
   - cleanup
+  - provision
