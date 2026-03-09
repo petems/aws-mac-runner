@@ -34,6 +34,13 @@ terraform.rc
 _work/
 _diag/
 
+# Puppet
+puppet/Gemfile.lock
+puppet/.bundle/
+puppet/vendor/
+puppet/site-modules/profile/spec/fixtures/modules/
+puppet/modules/
+
 # Secrets
 *.pem
 *.key

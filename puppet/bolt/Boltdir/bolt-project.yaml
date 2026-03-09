@@ -1,0 +1,4 @@
+---
+name: mac_runner
+plans:
+  - cleanup

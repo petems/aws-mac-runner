@@ -1,4 +1,5 @@
-.PHONY: help init plan apply destroy validate fmt lint shellcheck clean pre-commit
+.PHONY: help init plan apply destroy validate fmt lint shellcheck clean pre-commit \
+       puppet-deps puppet-lint puppet-validate puppet-test
 
 TERRAFORM_DIR := terraform
 
@@ -37,6 +38,18 @@ shellcheck: ## Run shellcheck on all scripts
 
 pre-commit: ## Run pre-commit hooks
 	pre-commit run --all-files
+
+puppet-deps: ## Install Puppet gem dependencies
+	cd puppet && bundle install
+
+puppet-lint: ## Run puppet-lint on manifests
+	cd puppet && bundle exec puppet-lint --relative site-modules/
+
+puppet-validate: ## Validate Puppet manifests
+	cd puppet && bundle exec puppet parser validate site-modules/role/manifests/*.pp site-modules/profile/manifests/**/*.pp
+
+puppet-test: ## Run rspec-puppet tests
+	cd puppet && bundle exec rake spec
 
 clean: ## Remove Terraform cache and state files
 	find $(TERRAFORM_DIR) -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true

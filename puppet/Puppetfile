@@ -1,0 +1,6 @@
+# Puppetfile - managed by r10k
+forge 'https://forge.puppet.com'
+
+mod 'puppetlabs-stdlib', '~> 9.0'
+mod 'thekevjames-homebrew', '~> 2.0'
+mod 'puppet-archive', '~> 8.0'
